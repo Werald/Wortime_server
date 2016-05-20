@@ -350,8 +350,8 @@ public class DatabaseManager {
         return false;
     }
 
-    public boolean isDateExist(String CDate, String name) {
-        CLog.log_console("Checking " + CDate + " of user " + name + " for existance in DB");
+    public boolean isDateExist(String CDate, String login) {
+        CLog.log_console("Checking for Start WDay at date: " + CDate + " of user " + login + " for existance in DB");
         Statement statement;
 
         try {
@@ -360,14 +360,14 @@ public class DatabaseManager {
             System.out.println("Database opened succesfully");
             statement = c.createStatement();
 
-            ResultSet rs = statement.executeQuery("SELECT * FROM users;");
+            ResultSet rs = statement.executeQuery("SELECT * FROM users");
 
             while (rs.next()) {
                 String _CDate = rs.getString("CDATE");
                 String _name = rs.getString("LOGIN");
 
-                if (_CDate.equals(CDate) && _name.equals(name)) {
-                    CLog.log_console("For user"+ name + "    " + CDate + " : true (isExist) ");
+                if (_CDate.equals(CDate) & _name.equals(login)) {
+                    CLog.log_console("For user"+ login + " at date: " + CDate + " : true (isExist) ");
                     return true;
                 }
             }
