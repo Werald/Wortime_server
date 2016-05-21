@@ -207,12 +207,13 @@ public class Main {
                         String ETime = jsonObject.getString("ETime");
                         String CDate = jsonObject.getString("CDate");
 
+                        cLog.log("get from UI login= " + login + " ETime= " + ETime + " CDate= " + CDate + " were received");
 
                         if (!login.equals(null) & !ETime.equals(null) & !CDate.equals(null)) {
                             if (databaseManager.isDateExist(CDate, login)) {                        //IF DATE EXIST, INSERT, ELSE - BREAK
                                 databaseManager.insert_ETime(ETime, CDate, login);
-                                cLog.log("Users_end_day " + login + " ETime " + ETime + " CDate " + CDate + " were added");
-      /*HELp*/
+                                cLog.log("Users_end_day for user= " + login + " ETime= " + ETime + " CDate= " + CDate + " were added");
+
                                 WortimeObject.EDResponse response = new WortimeObject.EDResponse();
                                 response.setInfo("End of WorkDay was successful!!!");
                                 response.setResult(true);
@@ -223,7 +224,7 @@ public class Main {
                             } else {
                                 cLog.log("Users_end_day " + login + " ETime " + ETime + " CDate " + CDate + " wasn`t added");
                                 WortimeObject.EDResponse response = new WortimeObject.EDResponse();
-                                response.setInfo("User already started WorkDay");
+                                response.setInfo("User already ended WorkDay");
                                 response.setResult(false);
                                 response.setType(WortimeObject.ED_RESPONSE);
                                 String jsResponse = gson.toJson(response);
@@ -245,26 +246,25 @@ public class Main {
                     }
 
 
-                    else if (type.equals(WortimeObject.WT_REQUEST))
-                    {
+                    else if (type.equals(WortimeObject.WT_REQUEST))  {
                         String login = jsonObject.getString("login");
-
-
                       if (!login.equals(null)) {
                             if (databaseManager.isExist(login))
                             {
                                 String WTime = databaseManager.GetWThours(login);
+                                CLog.log_console("********worked time = " + WTime + "**********");
                                 WortimeObject.WTResponse response = new WortimeObject.WTResponse();
-                                response.setInfo(WTime);
+                                response.setInfo("Wtime was calculated!!!");
+                                response.setResult(WTime);
                                 response.setResult(true);
                                 response.setType(WortimeObject.WT_RESPONSE);
                                 String jsResponse = gson.toJson(response);
                                 outputStream.writeUTF(jsResponse);
                                 outputStream.flush();
                             } else {
-                                cLog.log("User doesnt exist");
+                                cLog.log("WTIME doesnt exist -- User doesnt exist");
                                 WortimeObject.WTResponse response = new WortimeObject.WTResponse();
-                                response.setInfo("User dont exist");
+                                response.setInfo("WTIME doesnt exist ** User dont exist");
                                 response.setResult(false);
                                 response.setType(WortimeObject.WT_RESPONSE);
                                 String jsResponse = gson.toJson(response);

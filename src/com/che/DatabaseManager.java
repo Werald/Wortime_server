@@ -173,7 +173,7 @@ public class DatabaseManager {
             c.commit();
             c.close();
             System.out.println("Database closed succesfully");
-
+            CLog.log_console("2-nd table was succsessfully cleared!!!");
 
             /******* 2-nd statement *********/
 
@@ -188,6 +188,7 @@ public class DatabaseManager {
             c.commit();
             c.close();
             System.out.println("Database closed succesfully");
+            CLog.log_console("2-nd table was succsessfully updated frop table_1!!!");
 
             /*****  3-rd statement ****/
             c = DriverManager.getConnection(DB_URL);
@@ -196,6 +197,7 @@ public class DatabaseManager {
             System.out.println("Database is opened successfully");
             String sql3 = "SELECT * FROM users_wt";
             ResultSet rs = statement.executeQuery(sql3);
+            CLog.log_console("ALL data was succsessfully SELECTED from table_2!!!");
             String WTime = null;
             int i = 0;
             long result = 0;
@@ -210,6 +212,7 @@ public class DatabaseManager {
             c.commit();
             c.close();
             System.out.println("Database closed succesfully");
+            CLog.log_console("ALL WTIME was succsessfully CALKED from table_2!!!");
             return Long.toString(result);
 
         } catch (Exception ex) {

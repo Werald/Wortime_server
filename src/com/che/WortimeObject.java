@@ -37,6 +37,10 @@ public class WortimeObject {
             this.info = info;
         }
 
+        public String setResult(String result) {
+            return result;
+        }
+
         public boolean isResult() {
             return result;
         }
@@ -69,6 +73,7 @@ public class WortimeObject {
     public static class WTResponse extends Response
     {
         WTResponse() { }
+
     }
  //   public int GetWThours()    {   return Wthours;    }
 
