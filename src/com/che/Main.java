@@ -158,14 +158,17 @@ public class Main {
                             outputStream.writeUTF(jsResponse);
                             outputStream.flush();
                         }
+
                     } else if (type.equals(WortimeObject.SD_REQUEST)) {
                         String login = jsonObject.getString("login");
                         String STime = jsonObject.getString("STime");
                         String CDate = jsonObject.getString("CDate");
 
+                        cLog.log("from UI login= " + login + " STime= " + STime + " CDate= " + CDate + " were received");
 
-                        if (!login.equals(null) & !STime.equals(null) & !CDate.equals(null)) {
-                            if (!databaseManager.isDateExist(CDate, login)) {
+                                if (!login.equals(null) & !STime.equals(null) & !CDate.equals(null)) {
+                            if (!databaseManager.isDateNStimeExist(CDate, STime, login)) {
+                                CLog.log_console("start func insert_stime");
                                 databaseManager.insert_STime(STime, CDate, login);
                                 cLog.log("Users_start_day " + login + " STime " + STime + " CDate " + CDate + " were added");
       /*HELp*/

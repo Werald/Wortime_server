@@ -77,17 +77,17 @@ public class DatabaseManager {
 
     public void insert_STime(String _STime, String _CDate, String _login) {
         Statement statement = null;
-        if (!isExist( _login) ) {
+
             try {
                 c = DriverManager.getConnection(DB_URL);
                 c.setAutoCommit(false);
                 System.out.println("Database opened succesfully");
                 statement = c.createStatement();
-                String sql = "INSERT INTO users" + " (LOGIN, CDATE, STIME) " +
-                        "VALUES (" + formatSqlString(_login) + ", " + formatSqlString(_CDate) + ", "
-                        + formatSqlString(_STime) + " )";
+
+                String sql = "UPDATE users SET CDATE=" + formatSqlString(_CDate) + ", STIME=" + formatSqlString(_STime) +
+                        " WHERE LOGIN=" + formatSqlString(_login);
                 statement.executeUpdate(sql);
-                CLog.log_console("login: " + _login + "cur date: " + _CDate + "sTime" + _STime +" was added to database");
+                CLog.log_console("current date: " + _CDate + "and sTime" + _STime + " at login " + _login + " were added to database");
                 statement.close();
                 c.commit();
                 c.close();
@@ -108,7 +108,7 @@ public class DatabaseManager {
             }
 
             System.out.println(" Records created successfully");
-        }
+
 
     }
 
@@ -364,10 +364,59 @@ public class DatabaseManager {
 
             while (rs.next()) {
                 String _CDate = rs.getString("CDATE");
-                String _name = rs.getString("LOGIN");
+                String _login = rs.getString("LOGIN");
 
-                if (_CDate.equals(CDate) & _name.equals(login)) {
-                    CLog.log_console("For user"+ login + " at date: " + CDate + " : true (isExist) ");
+                CLog.log_console("For user"+ _login + " at date: " + _CDate + " result check was opened ");
+
+                if (_CDate.equals(CDate) && _login.equals(login)) {
+                    CLog.log_console("For user" + login + " at date: " + CDate + " : true (isExist) ");
+                    return true;
+
+                }
+            }
+            rs.close();
+            statement.close();
+            c.close();
+            System.out.println("Database closed succesfully");
+
+        } catch (Exception ex) {
+
+            ex.printStackTrace();
+            System.err.println(ex.getClass().getName() + ": " + ex.getMessage());
+            System.exit(0);
+        } finally {
+            try {
+                c.close();
+                System.out.println("Database closed succesfully");
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        }
+        return false;
+    }
+
+
+    public boolean isDateNStimeExist(String _CDate, String _STime, String _login) {
+        CLog.log_console("Checking for " + _login + " exist at date: " + _CDate + " of time " + _STime + " for existance in DB");
+        Statement statement;
+
+        try {
+            c = DriverManager.getConnection(DB_URL);
+            c.setAutoCommit(false);
+            System.out.println("Database opened succesfully");
+            statement = c.createStatement();
+
+            ResultSet rs = statement.executeQuery("SELECT * FROM users WHERE LOGIN = " + formatSqlString(_login));
+
+            while (rs.next()) {
+                String _CDateRS = rs.getString("CDATE");
+                String _STimeRS = rs.getString("STIME");
+
+                CLog.log_console("For time " + _STimeRS + " at date: " + _CDateRS + " USER " + _login + " result check was opened ");
+
+                if (_STime.equalsIgnoreCase(_STimeRS) & _CDate.equalsIgnoreCase(_CDateRS)) {
+
+                    CLog.log_console("For user "+ _login + "STIME" + _STime + " at date: " + _CDate + " : true (isExist) ");
                     return true;
                 }
             }
@@ -392,6 +441,16 @@ public class DatabaseManager {
         return false;
     }
 
+//public boolean calc1(String _CDateRS, String _STimeRS, String _CDate, String _STime ) {
+
+
+ //  int _CDateRSN = Integer.parseInt(_CDateRS);
+ //  int _STimeRSN = Integer.parseInt(_STimeRS);
+ //  int _SDateN = Integer.parseInt(_CDate);
+ //  int _STimeN = Integer.parseInt(_STime);
+
+ //   return (_CDateRSN != _SDateN) & (_STimeRSN != _STimeN);
+  //  }
 /*    public ArrayList<String> getAllUsers()
     {
         return null;
