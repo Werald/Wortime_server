@@ -164,7 +164,7 @@ public class Main {
                         String STime = jsonObject.getString("STime");
                         String CDate = jsonObject.getString("CDate");
 
-                        cLog.log("from UI login= " + login + " STime= " + STime + " CDate= " + CDate + " were received");
+                        cLog.log("get from UI login= " + login + " STime= " + STime + " CDate= " + CDate + " were received");
 
                                 if (!login.equals(null) & !STime.equals(null) & !CDate.equals(null)) {
                             if (!databaseManager.isDateNStimeExist(CDate, STime, login)) {

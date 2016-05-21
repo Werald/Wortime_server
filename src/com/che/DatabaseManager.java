@@ -76,8 +76,11 @@ public class DatabaseManager {
     }
 
     public void insert_STime(String _STime, String _CDate, String _login) {
+        CLog.log_console("*******insert_STARTTime*******");
         Statement statement = null;
+        String _Token = getToken(_login);
 
+        CLog.log_console("Token= " + _Token + "for login " + _login);
             try {
                 c = DriverManager.getConnection(DB_URL);
                 c.setAutoCommit(false);
@@ -85,9 +88,9 @@ public class DatabaseManager {
                 statement = c.createStatement();
 
                 String sql = "UPDATE users SET CDATE=" + formatSqlString(_CDate) + ", STIME=" + formatSqlString(_STime) +
-                        " WHERE LOGIN=" + formatSqlString(_login);
+                        " WHERE LOGIN=" + formatSqlString(_login) + " AND TOKEN=" + formatSqlString(_Token);
                 statement.executeUpdate(sql);
-                CLog.log_console("current date: " + _CDate + "and sTime" + _STime + " at login " + _login + " were added to database");
+                CLog.log_console("current date: " + _CDate + " and sTime " + _STime + " at login " + _login + " were added to database");
                 statement.close();
                 c.commit();
                 c.close();
@@ -113,6 +116,7 @@ public class DatabaseManager {
     }
 
     public void insert_ETime(String _ETime, String _CDate, String _login) {
+        CLog.log_console("*******insert_ENDTime*******");
         PreparedStatement sql = null;
 
         if (isDateExist(_CDate, _login)) {
@@ -151,36 +155,6 @@ public class DatabaseManager {
         }
     }
 
-    public String getHashOfLastMessage()
-    {
-        String hash = null;
-        Statement statement;
-        try {
-            c = DriverManager.getConnection(DB_URL);
-            c.setAutoCommit(false);
-            CLog.log_console("Database opened succesfully");
-            statement = c.createStatement();
-            ResultSet rs = statement.executeQuery("SELECT * FROM messages ORDER BY ID DESC LIMIT 1;");
-            hash = rs.getString("HASHCODE");
-            rs.close();
-            statement.close();
-            c.close();
-            CLog.log_console("Database closed successfully");
-            return hash;
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            System.err.println(ex.getClass().getName() + ": " + ex.getMessage());
-            System.exit(0);
-        } finally {
-            try {
-                c.close();
-                CLog.log_console("Database closed successfully");
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-            }
-        }
-        return null;
-    }
 
 
     public String GetWThours(String login) {
@@ -397,6 +371,7 @@ public class DatabaseManager {
 
 
     public boolean isDateNStimeExist(String _CDate, String _STime, String _login) {
+        CLog.log_console("*******isDateNStimeExist*******");
         CLog.log_console("Checking for " + _login + " exist at date: " + _CDate + " of time " + _STime + " for existance in DB");
         Statement statement;
 
@@ -441,23 +416,10 @@ public class DatabaseManager {
         return false;
     }
 
-//public boolean calc1(String _CDateRS, String _STimeRS, String _CDate, String _STime ) {
 
 
- //  int _CDateRSN = Integer.parseInt(_CDateRS);
- //  int _STimeRSN = Integer.parseInt(_STimeRS);
- //  int _SDateN = Integer.parseInt(_CDate);
- //  int _STimeN = Integer.parseInt(_STime);
-
- //   return (_CDateRSN != _SDateN) & (_STimeRSN != _STimeN);
-  //  }
-/*    public ArrayList<String> getAllUsers()
-    {
-        return null;
-    }
-*/
-
-    public String getToken(String login) {
+    public String getToken(String login) {                    //mb add password field near login in
+        CLog.log_console("*******GET_TOKEN_METHOD*******");
         if (!isExist(login)) {
             CLog.log_console("User not exist. Return null");
             return null;
@@ -469,7 +431,7 @@ public class DatabaseManager {
                 c.setAutoCommit(false);
                 CLog.log_console("Database opened succesfully");
                 statement = c.createStatement();
-                ResultSet rs = statement.executeQuery("SELECT * FROM users;");
+                ResultSet rs = statement.executeQuery("SELECT * FROM users");
                // ArrayList<String> list = new ArrayList<>();
                 while (rs.next()) {
                     String _name = rs.getString("LOGIN");
