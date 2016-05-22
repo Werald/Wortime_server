@@ -73,9 +73,14 @@ public class WortimeObject {
     public static class WTResponse extends Response
     {
         WTResponse() { }
-
     }
- //   public int GetWThours()    {   return Wthours;    }
+    public static class DOCResponse extends Response
+    {
+        DOCResponse() { }
+    }
+
+
+    //   public int GetWThours()    {   return Wthours;    }
 
 /*
     public static class GetMessageResponse extends Response
@@ -131,14 +136,14 @@ public class WortimeObject {
     public final static String SD_REQUEST = "sd_request";
     public final static String ED_REQUEST = "ed_request";
     public final static String WT_REQUEST = "wt_request";
-    public final static String DOC_REQUEST = "wt_request";
+    public final static String DOC_REQUEST = "doc_request";
 
     public final static String AUTH_RESPONSE = "auth_request";
     public final static String REG_RESPONSE = "reg_request";
     public final static String SD_RESPONSE = "sd_request";
     public final static String ED_RESPONSE = "ed_request";
     public final static String WT_RESPONSE = "wt_request";
-    public final static String DOC_RESPONSE = "wt_request";
+    public final static String DOC_RESPONSE = "doc_request";
 
 
 }

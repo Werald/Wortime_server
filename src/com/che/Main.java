@@ -44,19 +44,19 @@ public class Main {
 
     }
 
-/*
-        WortimeObject.GetMessageResponse response = new WortimeObject.GetMessageResponse();
-        response.setHash(new SessionIdentifierGenerator().generateString());
-        response.setType(WortimeObject.GETALLMSG_RESPONSE);
-        response.setResult(true);
-        response.setInfo("Pizdarikiy");
-        Gson gson = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().serializeNulls()
-                .create();
-        System.out.println(gson.toJson(response));
-*/
+//
+//      WortimeObject.GetMessageResponse response = new WortimeObject.GetMessageResponse();
+//      response.setHash(new SessionIdentifierGenerator().generateString());
+//      response.setType(WortimeObject.GETALLMSG_RESPONSE);
+//      response.setResult(true);
+//      response.setInfo("Pizdarikiy");
+//      Gson gson = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().serializeNulls()
+//              .create();
+//      System.out.println(gson.toJson(response));
+//
 
 
-    // outputStream.writeUTF(gson.toJson(databaseManager.getAllUsers()));      to klient
+//  // outputStream.writeUTF(gson.toJson(databaseManager.getAllUsers()));      to klient
 
 
 
@@ -88,17 +88,20 @@ public class Main {
                     String type = jsonObject.getString("type");
                     cLog.log("Type of request - " + type);
 
+
+
                     if (type.equals(WortimeObject.AUTH_REQUEST)) {
 
                         String login = jsonObject.getString("login");
                         String password = jsonObject.getString("password");
 
                         if (!login.equals(null) & !password.equals(null)) {
-                            if (databaseManager.isExist(login, password))
+                            if (databaseManager.isExist(login))
                             {
+
                                 WortimeObject.AuthResponse response = new WortimeObject.AuthResponse();
                                 response.setType(WortimeObject.AUTH_RESPONSE);
-                                response.setInfo("User was authorised");
+                                response.setInfo("User was authorised successfully");
                                 response.setResult(true);
                                 String jsResponse = gson.toJson(response);
                                 outputStream.writeUTF(jsResponse);
@@ -124,13 +127,14 @@ public class Main {
                             cLog.log("AuthResponse was sending to request");
                             outputStream.flush();
                         }
+                    /********   SAMA_SOL    ********/
                     } else if (type.equals(WortimeObject.REG_REQUEST)) {
                         String login = jsonObject.getString("login");
                         String password = jsonObject.getString("password");
 
                         if (!login.equals(null) & !password.equals(null)) {
-                            if (!databaseManager.isExist(login)) {
-                                databaseManager.insert(login, password);
+                            if (!databaseManager.isExist(login)) {    // do if _login doesnt exist in DB
+                                databaseManager.insert(login);
                                 cLog.log("User " + login + " was registered");
                                 WortimeObject.RegResponse response = new WortimeObject.RegResponse();
                                 response.setInfo("Registered success!!!");
@@ -140,25 +144,39 @@ public class Main {
                                 outputStream.writeUTF(jsResponse);
                                 outputStream.flush();
                             } else {
-                                cLog.log("User " + login + " wasn`t registered");
+                                if (!databaseManager.isSessionFin(login)) { //false - not fin,
+
+                                    cLog.log("User " + login + " wasn`t registered, because Previous session is **NOT** finished!!!");
+                                    cLog.log("PLEASE, AUTHORISE TO FINISH PREVIOUS SESSION");
+                                    WortimeObject.RegResponse response = new WortimeObject.RegResponse();
+                                    response.setInfo("User was already registered, session in progress");
+                                    response.setResult(false);
+                                    response.setType(WortimeObject.REG_RESPONSE);
+                                    String jsResponse = gson.toJson(response);
+                                    outputStream.writeUTF(jsResponse);
+                                    outputStream.flush();
+                                } else {                                        //true - fin
+                                    databaseManager.insert(login);
+                                    cLog.log("User " + login + " was registered");
+                                    WortimeObject.RegResponse response = new WortimeObject.RegResponse();
+                                    response.setInfo("Registered success!!!");
+                                    response.setResult(true);
+                                    response.setType(WortimeObject.REG_RESPONSE);
+                                    String jsResponse = gson.toJson(response);
+                                    outputStream.writeUTF(jsResponse);
+                                    outputStream.flush();
+                                }
+                            } if (login.equals(null) & password.equals(null)) {
                                 WortimeObject.RegResponse response = new WortimeObject.RegResponse();
-                                response.setInfo("User was already registered");
+                                response.setInfo("Login and password fields must be valid and non-zero");
                                 response.setResult(false);
                                 response.setType(WortimeObject.REG_RESPONSE);
                                 String jsResponse = gson.toJson(response);
                                 outputStream.writeUTF(jsResponse);
                                 outputStream.flush();
                             }
-                        } else {
-                            WortimeObject.RegResponse response = new WortimeObject.RegResponse();
-                            response.setInfo("Login and password fields must be valid and non-zero");
-                            response.setResult(false);
-                            response.setType(WortimeObject.REG_RESPONSE);
-                            String jsResponse = gson.toJson(response);
-                            outputStream.writeUTF(jsResponse);
-                            outputStream.flush();
                         }
-
+                                /****LAGGING SD****/
                     } else if (type.equals(WortimeObject.SD_REQUEST)) {
                         String login = jsonObject.getString("login");
                         String STime = jsonObject.getString("STime");
@@ -167,11 +185,11 @@ public class Main {
                         cLog.log("get from UI login= " + login + " STime= " + STime + " CDate= " + CDate + " were received");
 
                                 if (!login.equals(null) & !STime.equals(null) & !CDate.equals(null)) {
-                            if (!databaseManager.isDateNStimeExist(CDate, STime, login)) {
+                            if (!databaseManager.isDateAndStimeExist(CDate, STime, login)) {
                                 CLog.log_console("start func insert_stime");
                                 databaseManager.insert_STime(STime, CDate, login);
                                 cLog.log("Users_start_day " + login + " STime " + STime + " CDate " + CDate + " were added");
-      /*HELp*/
+
                                 WortimeObject.SDResponse response = new WortimeObject.SDResponse();
 
                                 response.setInfo("Start of WorkDay was successful!!!");
@@ -246,9 +264,23 @@ public class Main {
                     }
 
 
+                    else if (type.equals(WortimeObject.DOC_REQUEST)) {
+                        String login = jsonObject.getString("login");
+                        String DOC = databaseManager.GetDoc(login);
+                        CLog.log_console("********DOC = " + DOC + "**********");
+                        WortimeObject.DOCResponse response = new WortimeObject.DOCResponse();
+                        response.setInfo("DOC was loaded!!!");
+                        response.setResult(DOC);
+                        response.setResult(true);
+                        response.setType(WortimeObject.DOC_RESPONSE);
+                        String jsResponse = gson.toJson(response);
+                        outputStream.writeUTF(jsResponse);
+                        outputStream.flush();
+                    }
+
                     else if (type.equals(WortimeObject.WT_REQUEST))  {
                         String login = jsonObject.getString("login");
-                      if (!login.equals(null)) {
+                        if (!login.equals(null)) {
                             if (databaseManager.isExist(login))
                             {
                                 String WTime = databaseManager.GetWThours(login);
@@ -284,6 +316,22 @@ public class Main {
                             outputStream.flush();
                         }
                     }
+
+//                    else if (type.equals(WortimeObject.DOC_REQUEST)) {
+//                        String login = jsonObject.getString("login");
+//                        String DOC = databaseManager.GetDoc(login);
+//                        CLog.log_console("********DOC = " + DOC + "**********");
+//                        WortimeObject.DOCResponse response = new WortimeObject.DOCResponse();
+//                        response.setInfo("DOC was loaded!!!");
+//                        response.setResult(DOC);
+//                        response.setResult(true);
+//                        response.setType(WortimeObject.DOC_RESPONSE);
+//                        String jsResponse = gson.toJson(response);
+//                        outputStream.writeUTF(jsResponse);
+//                        outputStream.flush();
+//                    }
+
+
 
 
                     /*

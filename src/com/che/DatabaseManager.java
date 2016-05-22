@@ -1,5 +1,6 @@
 package com.che;
 
+import com.sun.org.apache.bcel.internal.generic.RETURN;
 import jdk.internal.org.objectweb.asm.tree.analysis.Value;
 
 import javax.swing.plaf.nimbus.State;
@@ -7,6 +8,7 @@ import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Objects;
 import java.util.TimeZone.*;
 
 
@@ -36,25 +38,24 @@ public class DatabaseManager {
     private String formatSqlString(String o) {
         return "\'" + o + "\'";
     }
-
-    public void insert(String _login, String _password) {
+    /****REGISTRATION ***/
+    public void insert(String _login) {
         Statement statement = null;
-        if (!isExist(_login)) {
+                    //new session
             try {
                 c = DriverManager.getConnection(DB_URL);
                 c.setAutoCommit(false);
-                System.out.println("Database opened succesfully");
+                System.out.println("Database opened successfully");
                 statement = c.createStatement();
-                String sql = "INSERT INTO users" + " (LOGIN, PASSWORD, TOKEN) " +
-                        "VALUES (" + formatSqlString(_login) + ", " + formatSqlString(_password) + ", "
-                        + formatSqlString(new SessionIdentifierGenerator().generateString()) + " )";
+                String sql = "INSERT INTO users" + " (LOGIN, TOKEN) " +
+                "VALUES (" + formatSqlString(_login) + ", "  + formatSqlString(new SessionIdentifierGenerator().generateString()) + " )";
                 statement.executeUpdate(sql);
-                CLog.log_console("login: " + _login + " password: " + _password + " were added to database");
+                CLog.log_console("login: " + _login + " and his parameters were added to database");
                 statement.close();
                 c.commit();
                 c.close();
 
-                System.out.println("Database closed succesfully");
+                System.out.println("Database closed successfully");
 
             } catch (Exception ex) {
                 ex.printStackTrace();
@@ -63,7 +64,7 @@ public class DatabaseManager {
             } finally {
                 try {
                     c.close();
-                    System.out.println("Database closed succesfully");
+                    System.out.println("Database closed successfully");
 
                 } catch (SQLException ex) {
                     ex.printStackTrace();
@@ -71,9 +72,8 @@ public class DatabaseManager {
             }
 
             System.out.println(" Records created successfully");
-        } else
-            return;
-    }
+        }
+
 
     public void insert_STime(String _STime, String _CDate, String _login) {
         CLog.log_console("*******insert_STARTTime*******");
@@ -155,8 +155,6 @@ public class DatabaseManager {
         }
     }
 
-
-
     public String GetWThours(String login) {
         Statement statement = null;
 
@@ -233,19 +231,219 @@ public class DatabaseManager {
         return null;
         }
 
-        public String wtimerah (String STime, String ETime){
+    public String wtimerah (String STime, String ETime){
         int ETime_num = Integer.parseInt(ETime);
         int STime_num = Integer.parseInt(STime);
         int WTime_num = ETime_num - STime_num;
-        String WTime = Integer.toString(WTime_num);
-        return WTime;
+        return Integer.toString(WTime_num);
 
         }
+
+    public String ID_max()    {
+        Statement statement;
+        try  {
+            c = DriverManager.getConnection(DB_URL);
+            c.setAutoCommit(false);
+            System.out.println("Database opened succesfully");
+            statement = c.createStatement();
+
+                 ResultSet rs = statement.executeQuery("SELECT MAX(ID) FROM users");
+                 String ID_max = rs.getString("MAX(ID)");
+                 rs.close();
+                 statement.close();
+                 c.close();
+                 System.out.println("Database closed succesfully");
+            return ID_max;
+             }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            System.err.println(ex.getClass().getName() + ": " + ex.getMessage());
+            System.exit(0);
+        } finally {
+            try {
+                c.close();
+                System.out.println("Database closed succesfully");
+
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        }
+
+        return null;
+    }
+
+    /***** getToken gets token for FIRst user in table ********/
+    public String getToken(String login) {                    //mb add password field near login in
+        CLog.log_console("*******GET_TOKEN_METHOD*******");
+        if (!isExist(login)) {
+            CLog.log_console("User not exist. Return null");
+            return null;
+        } else {
+            CLog.log_console("Getting token for " + login);
+            Statement statement;
+            try {
+                c = DriverManager.getConnection(DB_URL);
+                c.setAutoCommit(false);
+                CLog.log_console("Database opened succesfully");
+                statement = c.createStatement();
+                ResultSet rs = statement.executeQuery("SELECT * FROM users");
+                // ArrayList<String> list = new ArrayList<>();
+                while (rs.next()) {
+                    String _name = rs.getString("LOGIN");
+//                    if(!list.contains(_name))
+//                        list.add(_name);
+                    if (_name.equals(login))
+                        return rs.getString("TOKEN");
+                }
+                rs.close();
+                statement.close();
+                c.close();
+                System.out.println("Database closed successfully");
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                System.err.println(ex.getClass().getName() + ": " + ex.getMessage());
+                System.exit(0);
+            } finally {
+                try {
+                    c.close();
+                    System.out.println("Database closed successfully");
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }
+        return null;
+    }
+    /***** ISsESSIONfIN CHECKES STATUS OF PREVIOUS SESSION FOR USER_NAME ********/
+    public boolean isSessionFin (String _login)  {
+        Statement statement;
+        try  {
+            c = DriverManager.getConnection(DB_URL);
+            c.setAutoCommit(false);
+            System.out.println("Database opened succesfully");
+            statement = c.createStatement();
+            String sql = ("SELECT * FROM users WHERE LOGIN=" + formatSqlString(_login));
+
+            ResultSet rs = statement.executeQuery(sql);
+            while (rs.next()){
+            String _CDate = rs.getString("CDATE");
+            String _STime = rs.getString("STIME");
+            String _ETime = rs.getString("ETIME");
+            String _ID = rs.getString("ID");
+                CLog.log_console("Date from session: " + _ID + " Start Time: " + _STime + " End Time: " + _ETime);
+
+
+                if (Value_is_null(_STime) ||  Value_is_null(_ETime) || Value_is_null(_CDate))   //true
+                    return false;
+                CLog.log_console("cycle:" + _ID + "_Stime" + _STime);
+            }
+            rs.close();
+            statement.close();
+            c.close();
+            System.out.println("Database closed succesfully");
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            System.err.println(ex.getClass().getName() + ": " + ex.getMessage());
+            System.exit(0);
+        } finally {
+            try {
+                c.close();
+                System.out.println("Database closed succesfully");
+
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        }
+
+        return true;
+    }
+
+
+    public String getLast_C_Token(String _login)   {
+        Statement statement;
+
+        try  {
+            c = DriverManager.getConnection(DB_URL);
+            c.setAutoCommit(false);
+            System.out.println("Database opened succesfully");
+            statement = c.createStatement();
+            String id_max = ID_max();
+            int Id_mx = Integer.parseInt(id_max);
+            ResultSet rs = statement.executeQuery("SELECT * FROM users WHERE LOGIN=" + formatSqlString(_login) + "AND ID=" + Id_mx);
+            String _ID = rs.getString("ID");
+            String _Login = rs.getString("LOGIN");
+            String _ETime = rs.getString("ETIME");
+            String _CurToken = rs.getString("TOKEN");
+            if (!_CurToken.isEmpty())
+            {
+                return rs.getString("TOKEN");
+            }
+
+            rs.close();
+            statement.close();
+            c.close();
+            CLog.log_console("Recent token was returned: " + _CurToken);
+            System.out.println("Database closed succesfully");
+
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            System.err.println(ex.getClass().getName() + ": " + ex.getMessage());
+            System.exit(0);
+        } finally {
+            try {
+                c.close();
+                System.out.println("Database closed succesfully");
+
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        }
+        CLog.log_console("Recent token was returned: " );
+        return null;
+    }
+
+
+    public String GetDoc(String _login) {
+        Statement statement = null;
+        try {
+
+            c = DriverManager.getConnection(DB_URL);
+            c.setAutoCommit(false);
+            statement = c.createStatement();
+            System.out.println("Database is opened successfully");
+            String sql3 = "SELECT * FROM docum";
+            ResultSet rs = statement.executeQuery(sql3);
+            String Doc = rs.getString("DOCFILE");
+            statement.close();
+            c.commit();
+            c.close();
+            System.out.println("Database closed succesfully");
+            return Doc;
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            System.err.println(ex.getClass().getName() + ": " + ex.getMessage());
+            System.exit(0);
+        } finally {
+            try {
+                c.close();
+                System.out.println("Database closed succesfully");
+
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        }
+
+        System.out.println(" Records created successfully");
+        return null;
+    }
 
 
 /*********************** Is Exist Checks   **************************************/
 
-        public boolean isExist(String name, String password) {
+    public boolean isExist(String name, String password) {
             Statement statement;
 
             try {
@@ -287,13 +485,13 @@ public class DatabaseManager {
         }
 
     public boolean isExist(String login) {
-        CLog.log_console("Checking " + login + " for avaliablity");
+        CLog.log_console("Checking " + login + " for availability");
         Statement statement;
 
         try {
             c = DriverManager.getConnection(DB_URL);
             c.setAutoCommit(false);
-            System.out.println("Database opened succesfully");
+            System.out.println("Database opened successfully");
             statement = c.createStatement();
 
             ResultSet rs = statement.executeQuery("SELECT * FROM users;");
@@ -302,7 +500,7 @@ public class DatabaseManager {
                 String _login = rs.getString("LOGIN");
 
                 if (_login.equals(login)) {
-                    CLog.log_console(login + " : true (isExist) ");
+                    CLog.log_console(login + " :_login_name is true (isExist) ");
                     return true;
                 }
             }
@@ -328,7 +526,7 @@ public class DatabaseManager {
     }
 
     public boolean isDateExist(String CDate, String login) {
-        CLog.log_console("Checking for Start WDay at date: " + CDate + " of user " + login + " for existance in DB");
+        CLog.log_console("Checking for Start WDay at date: " + CDate + " of user " + login + " for existence in DB");
         Statement statement;
 
         try {
@@ -337,7 +535,7 @@ public class DatabaseManager {
             System.out.println("Database opened succesfully");
             statement = c.createStatement();
 
-            ResultSet rs = statement.executeQuery("SELECT * FROM users");
+            ResultSet rs = statement.executeQuery("SELECT * FROM users WHERE LOGIN= " + formatSqlString(login));
 
             while (rs.next()) {
                 String _CDate = rs.getString("CDATE");
@@ -345,7 +543,7 @@ public class DatabaseManager {
 
                 CLog.log_console("For user"+ _login + " at date: " + _CDate + " result check was opened ");
 
-                if (_CDate.equals(CDate) && _login.equals(login)) {
+                if (CDate.equalsIgnoreCase(_CDate) && login.equalsIgnoreCase(_login)) {
                     CLog.log_console("For user" + login + " at date: " + CDate + " : true (isExist) ");
                     return true;
 
@@ -373,7 +571,7 @@ public class DatabaseManager {
     }
 
 
-    public boolean isDateNStimeExist(String _CDate, String _STime, String _login) {
+    public boolean isDateAndStimeExist(String _CDate, String _STime, String _login) {
         CLog.log_console("*******isDateNStimeExist*******");
         CLog.log_console("Checking for " + _login + " exist at date: " + _CDate + " of time " + _STime + " for existance in DB");
         Statement statement;
@@ -392,10 +590,10 @@ public class DatabaseManager {
 
                 CLog.log_console("For time " + _STimeRS + " at date: " + _CDateRS + " USER " + _login + " result check was opened ");
 
-                if (_STime.equalsIgnoreCase(_STimeRS) & _CDate.equalsIgnoreCase(_CDateRS)) {
+                if (Value_is_null(_STimeRS) & Value_is_null(_CDateRS)) {
 
-                    CLog.log_console("For user "+ _login + "STIME" + _STime + " at date: " + _CDate + " : true (isExist) ");
-                    return true;
+                    CLog.log_console("Session for user "+ _login + "STIME" + _STime + " at date: " + _CDate + " : true (isExist) ");
+                    return false;
                 }
             }
             rs.close();
@@ -416,52 +614,14 @@ public class DatabaseManager {
                 ex.printStackTrace();
             }
         }
-        return false;
+        return true;
     }
 
-
-
-    public String getToken(String login) {                    //mb add password field near login in
-        CLog.log_console("*******GET_TOKEN_METHOD*******");
-        if (!isExist(login)) {
-            CLog.log_console("User not exist. Return null");
-            return null;
-        } else {
-            CLog.log_console("Getting token for " + login);
-            Statement statement;
-            try {
-                c = DriverManager.getConnection(DB_URL);
-                c.setAutoCommit(false);
-                CLog.log_console("Database opened succesfully");
-                statement = c.createStatement();
-                ResultSet rs = statement.executeQuery("SELECT * FROM users");
-               // ArrayList<String> list = new ArrayList<>();
-                while (rs.next()) {
-                    String _name = rs.getString("LOGIN");
-//                    if(!list.contains(_name))
-//                        list.add(_name);
-                    if (_name.equals(login))
-                        return rs.getString("TOKEN");
-                }
-                rs.close();
-                statement.close();
-                c.close();
-                System.out.println("Database closed successfully");
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                System.err.println(ex.getClass().getName() + ": " + ex.getMessage());
-                System.exit(0);
-            } finally {
-                try {
-                    c.close();
-                    System.out.println("Database closed successfully");
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-            }
-        }
-        return null;
+    public boolean Value_is_null(String value)
+    {
+        return value == null;
     }
+
 }
 /*******************************************************/
 
