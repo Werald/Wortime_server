@@ -134,7 +134,7 @@ public class Main {
 
                         if (!login.equals(null) & !password.equals(null)) {
                             if (!databaseManager.isExist(login)) {    // do if _login doesnt exist in DB
-                                databaseManager.insert(login);
+                                databaseManager.insert(login, password);
                                 cLog.log("User " + login + " was registered");
                                 WortimeObject.RegResponse response = new WortimeObject.RegResponse();
                                 response.setInfo("Registered success!!!");
@@ -156,10 +156,10 @@ public class Main {
                                     outputStream.writeUTF(jsResponse);
                                     outputStream.flush();
                                 } else {                                        //true - fin
-                                    databaseManager.insert(login);
+                                    databaseManager.insert(login, password);
                                     cLog.log("User " + login + " was registered");
                                     WortimeObject.RegResponse response = new WortimeObject.RegResponse();
-                                    response.setInfo("Registered success!!!");
+                                    response.setInfo("Registration success!!!");
                                     response.setResult(true);
                                     response.setType(WortimeObject.REG_RESPONSE);
                                     String jsResponse = gson.toJson(response);
@@ -281,7 +281,7 @@ public class Main {
                     else if (type.equals(WortimeObject.WT_REQUEST))  {
                         String login = jsonObject.getString("login");
                         if (!login.equals(null)) {
-                            if (databaseManager.isExist(login))
+                            if (databaseManager.isWT_Available(login))
                             {
                                 String WTime = databaseManager.GetWThours(login);
                                 CLog.log_console("********worked time = " + WTime + "**********");

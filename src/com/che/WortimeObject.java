@@ -1,7 +1,5 @@
 package com.che;
 
-import java.util.ArrayList;
-
 /**
  * Created by Alexx on 14.05.2016.
  */
@@ -37,10 +35,6 @@ public class WortimeObject {
             this.info = info;
         }
 
-        public String setResult(String result) {
-            return result;
-        }
-
         public boolean isResult() {
             return result;
         }
@@ -50,9 +44,119 @@ public class WortimeObject {
         }
     }
 
+    public static class SdRequest extends MMessage
+    {
+        private String login;
+        private String STime;
+        private String CDate;
+
+
+        public String getcDate() {
+            return CDate;
+        }
+
+        public void setcDate(String cDate) {
+            this.CDate = cDate;
+        }
+
+        public String getLogin() {
+            return login;
+        }
+
+        public void setLogin(String login) {
+            this.login = login;
+        }
+
+        public String getSTime() {
+            return STime;
+        }
+
+        public void setSTime(String STime) {
+            this.STime = STime;
+        }
+    }
+
+    public static class EdRequest extends MMessage
+    {
+        private String login;
+        private String ETime;
+        private String CDate;
+
+
+        public String getcDate() {
+            return CDate;
+        }
+
+        public void setcDate(String cDate) {
+            this.CDate = cDate;
+        }
+
+        public String getLogin() {
+            return login;
+        }
+
+        public void setLogin(String login) {
+            this.login = login;
+        }
+
+        public String getETime() {
+            return ETime;
+        }
+
+        public void setETime(String ETime) {
+            this.ETime = ETime;
+        }
+    }
+
+    public static class RegAuthRequest extends MMessage
+    {
+        private String login;
+        private String password;
+
+        public RegAuthRequest() { }
+
+        public String getLogin() {
+            return login;
+        }
+
+        public void setLogin(String login) {
+            this.login = login;
+        }
+
+        public String getPassword() {
+            return password;
+        }
+
+        public void setPassword(String password) {
+            this.password = password;
+        }
+    }
+
+    public static class WTRequest extends MMessage
+    {
+        private String login;
+
+
+        public String getLogin() {
+            return login;
+        }
+
+        public void setLogin(String login) {
+            this.login = login;
+        }
+    }
+    public static class DOCRequest extends MMessage
+    {
+        private String login;
+        public void setLogin(String login) {
+            this.login = login;
+        }
+
+    }
+
+
     public static class AuthResponse extends Response
     {
-
         AuthResponse() { }
     }
 
@@ -72,14 +176,28 @@ public class WortimeObject {
     }
     public static class WTResponse extends Response
     {
+        private String result;
+
         WTResponse() { }
+        public String getResult() {
+            return result;
+        }
+        public void setResult(String result) {
+            this.result = result;
+        }
     }
     public static class DOCResponse extends Response
     {
+        private String result;
+
         DOCResponse() { }
+        public String getResult() {
+            return result;
+        }
+        public void setResult(String result) {
+            this.result = result;
+        }
     }
-
-
     //   public int GetWThours()    {   return Wthours;    }
 
 /*

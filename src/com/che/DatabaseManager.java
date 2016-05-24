@@ -39,7 +39,7 @@ public class DatabaseManager {
         return "\'" + o + "\'";
     }
     /****REGISTRATION ***/
-    public void insert(String _login) {
+    public void insert(String _login, String _password) {
         Statement statement = null;
                     //new session
             try {
@@ -47,10 +47,10 @@ public class DatabaseManager {
                 c.setAutoCommit(false);
                 System.out.println("Database opened successfully");
                 statement = c.createStatement();
-                String sql = "INSERT INTO users" + " (LOGIN, TOKEN) " +
-                "VALUES (" + formatSqlString(_login) + ", "  + formatSqlString(new SessionIdentifierGenerator().generateString()) + " )";
+                String sql = "INSERT INTO users" + " (LOGIN, PASSWORD, TOKEN) " +
+                "VALUES (" + formatSqlString(_login) + ", " + formatSqlString(_password) + ", " + formatSqlString(new SessionIdentifierGenerator().generateString()) + " )";
                 statement.executeUpdate(sql);
-                CLog.log_console("login: " + _login + " and his parameters were added to database");
+                CLog.log_console("login: " + _login + " password" + _password + " and his parameters were added to database");
                 statement.close();
                 c.commit();
                 c.close();
@@ -78,7 +78,7 @@ public class DatabaseManager {
     public void insert_STime(String _STime, String _CDate, String _login) {
         CLog.log_console("*******insert_STARTTime*******");
         Statement statement = null;
-        String _Token = getToken(_login);
+        String _Token = getLast_C_Token(_login);
 
         CLog.log_console("Token= " + _Token + "for login " + _login);
             try {
@@ -171,7 +171,7 @@ public class DatabaseManager {
             c.commit();
             c.close();
             System.out.println("Database closed succesfully");
-            CLog.log_console("2-nd table was succsessfully cleared!!!");
+            CLog.log_console("wt_users table was succsessfully cleared!!!");
 
             /******* 2-nd statement *********/
 
@@ -186,7 +186,7 @@ public class DatabaseManager {
             c.commit();
             c.close();
             System.out.println("Database closed succesfully");
-            CLog.log_console("2-nd table was succsessfully updated frop table_1!!!");
+            CLog.log_console("wt_users table was succsessfully updated frop table users!!!");
 
             /*****  3-rd statement ****/
             c = DriverManager.getConnection(DB_URL);
@@ -195,7 +195,7 @@ public class DatabaseManager {
             System.out.println("Database is opened successfully");
             String sql3 = "SELECT * FROM users_wt";
             ResultSet rs = statement.executeQuery(sql3);
-            CLog.log_console("ALL data was succsessfully SELECTED from table_2!!!");
+            CLog.log_console("ALL data was succsessfully SELECTED from table wt_users!!!");
             String WTime = null;
             int i = 0;
             long result = 0;
@@ -204,13 +204,13 @@ public class DatabaseManager {
                 String ETime = rs.getString("ETIME");
                 WTime =  wtimerah(STime, ETime);
                 result += Long.parseLong(WTime);
-                System.out.println("New Wtime for user_name" + login + "i=" + i++);
+                System.out.println("New Wtime " + WTime + " for user_name " + login + " i= " + i++);
             }
             statement.close();
             c.commit();
             c.close();
             System.out.println("Database closed succesfully");
-            CLog.log_console("ALL WTIME was succsessfully CALKED from table_2!!!");
+            CLog.log_console("ALL WTIME was succsessfully CALKED from wt_users!!!");
             return Long.toString(result);
 
         } catch (Exception ex) {
@@ -239,7 +239,7 @@ public class DatabaseManager {
 
         }
 
-    public String ID_max()    {
+    public String ID_max_Toktable()    {
         Statement statement;
         try  {
             c = DriverManager.getConnection(DB_URL);
@@ -247,7 +247,7 @@ public class DatabaseManager {
             System.out.println("Database opened succesfully");
             statement = c.createStatement();
 
-                 ResultSet rs = statement.executeQuery("SELECT MAX(ID) FROM users");
+                 ResultSet rs = statement.executeQuery("SELECT MAX(ID) FROM toktable");
                  String ID_max = rs.getString("MAX(ID)");
                  rs.close();
                  statement.close();
@@ -357,35 +357,61 @@ public class DatabaseManager {
         }
 
         return true;
-    }
+    }                       //perfect
 
 
     public String getLast_C_Token(String _login)   {
         Statement statement;
-
+        String _ID_max_STR_tok=null;
         try  {
+
+            /******* 1-st statement *********/
             c = DriverManager.getConnection(DB_URL);
             c.setAutoCommit(false);
-            System.out.println("Database opened succesfully");
             statement = c.createStatement();
-            String id_max = ID_max();
-            int Id_mx = Integer.parseInt(id_max);
-            ResultSet rs = statement.executeQuery("SELECT * FROM users WHERE LOGIN=" + formatSqlString(_login) + "AND ID=" + Id_mx);
-            String _ID = rs.getString("ID");
-            String _Login = rs.getString("LOGIN");
-            String _ETime = rs.getString("ETIME");
-            String _CurToken = rs.getString("TOKEN");
-            if (!_CurToken.isEmpty())
-            {
-                return rs.getString("TOKEN");
-            }
-
-            rs.close();
+            System.out.println("Database is opened successfully");
+            String sql1 = "DELETE FROM toktable";
+            statement.executeUpdate(sql1);
             statement.close();
+            c.commit();
             c.close();
-            CLog.log_console("Recent token was returned: " + _CurToken);
             System.out.println("Database closed succesfully");
+            CLog.log_console("toktable table was succsessfully cleared!!!");
 
+            /******* 2-nd statement *********/
+
+            c = DriverManager.getConnection(DB_URL);
+            c.setAutoCommit(false);
+            statement = c.createStatement();
+            System.out.println("Database is opened successfully");
+            String sql2 = "INSERT INTO toktable (ID, LOGIN, TOKEN) SELECT ID, LOGIN, TOKEN FROM users " +
+                    "WHERE LOGIN=(" + formatSqlString(_login) + ")" ;
+            statement.executeUpdate(sql2);
+            statement.close();
+            c.commit();
+            c.close();
+            System.out.println("Database closed succesfully");
+            CLog.log_console("toktable table was succsessfully updated from table_users!!!");
+
+            /*****  3-rd statement ****/
+            c = DriverManager.getConnection(DB_URL);
+            c.setAutoCommit(false);
+            statement = c.createStatement();
+            System.out.println("Database is opened successfully");
+            _ID_max_STR_tok = ID_max_Toktable();
+            int _Id_max_INT_tok = Integer.parseInt(_ID_max_STR_tok);
+            String sql3 = "SELECT * FROM toktable WHERE ID=" + _Id_max_INT_tok;
+            ResultSet rs = statement.executeQuery(sql3);
+            CLog.log_console("Data loaded for ID= " + _Id_max_INT_tok);
+            String Login = rs.getString("LOGIN");
+            String Token = rs.getString("TOKEN");
+            System.out.println("recent token for user_name " + Login + " was delivered: token=" + Token);
+            statement.close();
+            c.commit();
+            c.close();
+            System.out.println("Database closed succesfully");
+            CLog.log_console("Token was succsessfully delivered from toktable");
+            return Token;
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -402,7 +428,7 @@ public class DatabaseManager {
         }
         CLog.log_console("Recent token was returned: " );
         return null;
-    }
+    }  //must work
 
 
     public String GetDoc(String _login) {
@@ -443,7 +469,7 @@ public class DatabaseManager {
 
 /*********************** Is Exist Checks   **************************************/
 
-    public boolean isExist(String name, String password) {
+    public boolean isWT_Available(String _login) {
             Statement statement;
 
             try {
@@ -452,15 +478,14 @@ public class DatabaseManager {
                 System.out.println("Database opened succesfully");
                 statement = c.createStatement();
 
-                ResultSet rs = statement.executeQuery("SELECT * FROM users;");
+                ResultSet rs = statement.executeQuery("SELECT * FROM users WHERE LOGIN=" + formatSqlString(_login));
 
                 while (rs.next()) {
-                    String _name = rs.getString("LOGIN");
-                    String _password = rs.getString("PASSWORD");
-
-                    if (_name.equals(name) && _password.equals(password))
-                        return true;
+                    String _etime = rs.getString("ETIME");
+                    if (Value_is_null(_etime))
+                        return false;
                 }
+
                 rs.close();
                 statement.close();
                 c.close();
@@ -481,7 +506,7 @@ public class DatabaseManager {
                 }
             }
 
-            return false;
+            return true;
         }
 
     public boolean isExist(String login) {
@@ -575,14 +600,15 @@ public class DatabaseManager {
         CLog.log_console("*******isDateNStimeExist*******");
         CLog.log_console("Checking for " + _login + " exist at date: " + _CDate + " of time " + _STime + " for existance in DB");
         Statement statement;
-
+        String _Token = getLast_C_Token(_login);
         try {
             c = DriverManager.getConnection(DB_URL);
             c.setAutoCommit(false);
             System.out.println("Database opened succesfully");
             statement = c.createStatement();
+            String sql = "SELECT * FROM users WHERE LOGIN = " + formatSqlString(_login) + "AND TOKEN =" + formatSqlString(_Token);
 
-            ResultSet rs = statement.executeQuery("SELECT * FROM users WHERE LOGIN = " + formatSqlString(_login));
+            ResultSet rs = statement.executeQuery(sql);
 
             while (rs.next()) {
                 String _CDateRS = rs.getString("CDATE");
