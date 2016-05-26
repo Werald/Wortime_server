@@ -98,15 +98,18 @@ public class Main {
                         if (!login.equals(null) & !password.equals(null)) {
                             if (databaseManager.isExist(login))
                             {
+                                if (!databaseManager.isSessionFin(login)) { //session fin/null, start new
 
-                                WortimeObject.AuthResponse response = new WortimeObject.AuthResponse();
-                                response.setType(WortimeObject.AUTH_RESPONSE);
-                                response.setInfo("User was authorised successfully");
-                                response.setResult(true);
-                                String jsResponse = gson.toJson(response);
-                                outputStream.writeUTF(jsResponse);
-                                cLog.log("AuthResponse was sending to request");
-                                outputStream.flush();
+                                    WortimeObject.AuthResponse response = new WortimeObject.AuthResponse();
+                                    response.setType(WortimeObject.AUTH_RESPONSE);
+                                    response.setInfo("User was authorised successfully");
+                                    response.setResult(true);
+                                    String jsResponse = gson.toJson(response);
+                                    outputStream.writeUTF(jsResponse);
+                                    cLog.log("User was authorised successfully");
+                                    outputStream.flush();
+                                }
+
                             } else {
                                 WortimeObject.AuthResponse response = new WortimeObject.AuthResponse();
                                 response.setType(WortimeObject.AUTH_RESPONSE);
@@ -114,7 +117,7 @@ public class Main {
                                 response.setResult(false);
                                 String jsResponse = gson.toJson(response);
                                 outputStream.writeUTF(jsResponse);
-                                cLog.log("AuthResponse was sending to request");
+                                cLog.log("User wasn`t found. Check registration`s data.");
                                 outputStream.flush();
                             }
                         } else {
@@ -124,10 +127,10 @@ public class Main {
                             response.setResult(false);
                             String jsResponse = gson.toJson(response);
                             outputStream.writeUTF(jsResponse);
-                            cLog.log("AuthResponse was sending to request");
+                            cLog.log("Login and password fields must be valid and non-zero");
                             outputStream.flush();
                         }
-                    /********   SAMA_SOL    ********/
+
                     } else if (type.equals(WortimeObject.REG_REQUEST)) {
                         String login = jsonObject.getString("login");
                         String password = jsonObject.getString("password");
@@ -181,13 +184,19 @@ public class Main {
                         String login = jsonObject.getString("login");
                         String STime = jsonObject.getString("STime");
                         String CDate = jsonObject.getString("CDate");
-
+                        String ID_max_cur = databaseManager.ID_max_Users();
+                        String Token_cur = databaseManager.getLast_C_Token_Users(login, ID_max_cur);
                         cLog.log("get from UI login= " + login + " STime= " + STime + " CDate= " + CDate + " were received");
 
-                                if (!login.equals(null) & !STime.equals(null) & !CDate.equals(null)) {
-                            if (!databaseManager.isDateAndStimeExist(CDate, STime, login)) {
-                                CLog.log_console("start func insert_stime");
-                                databaseManager.insert_STime(STime, CDate, login);
+                                if (!login.equals(null) & !STime.equals(null) & !CDate.equals(null)){
+//                            if (!databaseManager.isDateAndStimeExist(CDate, STime, login)) {
+                                    if (!databaseManager.isDateExist(CDate, login)) {
+
+                                        cLog.log("ID_max_cur= "+ID_max_cur);
+
+                                CLog.log_console("current token is = "+Token_cur+ " start func insert_stime");
+
+                                databaseManager.insert_STime(STime, CDate, login, Token_cur);
                                 cLog.log("Users_start_day " + login + " STime " + STime + " CDate " + CDate + " were added");
 
                                 WortimeObject.SDResponse response = new WortimeObject.SDResponse();
